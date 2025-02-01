@@ -22,6 +22,11 @@ export default {
         gold: {
           DEFAULT: "#B8860B",
           light: "#DAA520",
+          dark: "#8B6914",
+        },
+        midnight: {
+          DEFAULT: "#221F26",
+          light: "#2D2B33",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -58,8 +63,8 @@ export default {
         },
       },
       fontFamily: {
-        playfair: ["Playfair Display", "serif"],
-        inter: ["Inter", "sans-serif"],
+        space: ["Space Grotesk", "sans-serif"],
+        syncopate: ["Syncopate", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -75,10 +80,15 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "float": "float 3s ease-in-out infinite",
       },
     },
   },
