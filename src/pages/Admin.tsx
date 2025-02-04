@@ -21,7 +21,7 @@ export default function Admin() {
     }
   });
 
-  const { data: profile, isLoading, error } = useQuery({
+  const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -47,15 +47,8 @@ export default function Admin() {
       console.log("No session found, redirecting to login");
       toast.error("Please login to access the admin panel");
       navigate('/auth');
-      return;
     }
-
-    if (!isLoading && (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin'))) {
-      console.log("Unauthorized access attempt, redirecting to home");
-      toast.error("You don't have permission to access the admin panel");
-      navigate('/');
-    }
-  }, [session, profile, isLoading, navigate]);
+  }, [session, navigate]);
 
   if (isLoading) {
     return (
@@ -68,12 +61,6 @@ export default function Admin() {
         </div>
       </div>
     );
-  }
-
-  if (error) {
-    console.error("Error in admin panel:", error);
-    toast.error("Error loading admin panel");
-    return null;
   }
 
   if (!profile) return null;
