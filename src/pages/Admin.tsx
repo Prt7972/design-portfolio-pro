@@ -11,35 +11,67 @@ import { AdminBrochures } from "@/components/admin/AdminBrochures";
 import { AdminUsers } from "@/components/admin/AdminUsers";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function Admin() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("dashboard");
   
   // Fetch user profile to check role
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, error } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
+      console.log("Fetching user profile...");
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) {
+        console.log("No user found");
+        throw new Error('Not authenticated');
+      }
       
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
-      
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
+
+      console.log("Profile fetched:", profile);
       return profile;
     }
   });
 
   useEffect(() => {
     if (!isLoading && (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin'))) {
+      console.log("Unauthorized access attempt, redirecting to home");
+      toast.error("You don't have permission to access the admin panel");
       navigate('/');
     }
   }, [profile, isLoading, navigate]);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex w-full bg-background p-6">
+        <div className="w-64">
+          <Skeleton className="h-[600px] w-full" />
+        </div>
+        <div className="flex-1 ml-6">
+          <Skeleton className="h-[600px] w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Error in admin panel:", error);
+    toast.error("Error loading admin panel");
+    return null;
+  }
+
   if (!profile) return null;
 
   const menuItems = [
@@ -72,7 +104,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      <Sidebar>
+      <Sidebar variant="inset" collapsible="icon">
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
@@ -82,9 +114,10 @@ export default function Admin() {
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
                       onClick={() => setActiveSection(item.id)}
-                      className={`w-full ${activeSection === item.id ? 'bg-accent' : ''}`}
+                      isActive={activeSection === item.id}
+                      tooltip={item.title}
                     >
-                      <item.icon className="w-4 h-4 mr-2" />
+                      <item.icon className="w-4 h-4" />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -94,7 +127,7 @@ export default function Admin() {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 overflow-auto">
         {renderContent()}
       </main>
     </div>
