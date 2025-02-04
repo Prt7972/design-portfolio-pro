@@ -36,30 +36,51 @@ export default function Auth() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Attempting authentication...");
+    console.log("Email:", values.email);
     setIsLoading(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: values.email,
           password: values.password,
         });
-        if (error) throw error;
-        console.log("Login successful");
+        
+        if (error) {
+          console.error("Login error:", error);
+          if (error.message === "Invalid login credentials") {
+            toast.error("Invalid email or password. Please try again.");
+          } else {
+            toast.error(error.message);
+          }
+          return;
+        }
+
+        console.log("Login successful:", data);
         toast.success("Welcome back!");
-        navigate("/");
+        navigate("/admin");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
         });
-        if (error) throw error;
-        console.log("Signup successful");
+
+        if (error) {
+          console.error("Signup error:", error);
+          if (error.message.includes("User already registered")) {
+            toast.error("This email is already registered. Please login instead.");
+          } else {
+            toast.error(error.message);
+          }
+          return;
+        }
+
+        console.log("Signup successful:", data);
         toast.success("Account created successfully! You can now log in.");
         setIsLogin(true);
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
-      toast.error(error.message || "Authentication failed");
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -131,6 +152,12 @@ export default function Auth() {
               ? "Don't have an account? Sign up"
               : "Already have an account? Sign in"}
           </Button>
+        </div>
+
+        <div className="text-center text-sm text-muted-foreground">
+          <p>For development, use these credentials:</p>
+          <p>Email: snehaljain075@gmail.com</p>
+          <p>Password: password123</p>
         </div>
       </div>
     </div>
