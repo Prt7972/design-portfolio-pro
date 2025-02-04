@@ -1,38 +1,36 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Settings, Users, Database, FileText, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { AdminProducts } from "@/components/admin/AdminProducts";
-import { AdminCategories } from "@/components/admin/AdminCategories";
-import { AdminBrochures } from "@/components/admin/AdminBrochures";
-import { AdminUsers } from "@/components/admin/AdminUsers";
-import { AdminSettings } from "@/components/admin/AdminSettings";
-import { useState } from "react";
+import { Sidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { AdminSidebarMenu } from "@/components/admin/AdminSidebarMenu";
+import { AdminContent } from "@/components/admin/AdminContent";
 
 export default function Admin() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("dashboard");
   
-  // Fetch user profile to check role
+  // Check if user is authenticated first
+  const { data: session } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    }
+  });
+
+  // Then fetch user profile to check role
   const { data: profile, isLoading, error } = useQuery({
-    queryKey: ['profile'],
+    queryKey: ['profile', session?.user?.id],
+    enabled: !!session?.user?.id,
     queryFn: async () => {
       console.log("Fetching user profile...");
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log("No user found");
-        throw new Error('Not authenticated');
-      }
-      
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', session?.user?.id)
         .single();
 
       if (error) {
@@ -46,12 +44,21 @@ export default function Admin() {
   });
 
   useEffect(() => {
+    // If not authenticated, redirect to login
+    if (!session) {
+      console.log("No session found, redirecting to login");
+      toast.error("Please login to access the admin panel");
+      navigate('/auth');
+      return;
+    }
+
+    // If authenticated but not admin/super_admin, redirect to home
     if (!isLoading && (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin'))) {
       console.log("Unauthorized access attempt, redirecting to home");
       toast.error("You don't have permission to access the admin panel");
       navigate('/');
     }
-  }, [profile, isLoading, navigate]);
+  }, [session, profile, isLoading, navigate]);
 
   if (isLoading) {
     return (
@@ -74,62 +81,19 @@ export default function Admin() {
 
   if (!profile) return null;
 
-  const menuItems = [
-    { id: "dashboard", title: "Dashboard", icon: Home },
-    { id: "products", title: "Products", icon: Database },
-    { id: "categories", title: "Categories", icon: FileText },
-    { id: "brochures", title: "Brochures", icon: FileText },
-    ...(profile.role === 'super_admin' ? [{ id: "users", title: "Users", icon: Users }] : []),
-    { id: "settings", title: "Settings", icon: Settings },
-  ];
-
-  const renderContent = () => {
-    switch (activeSection) {
-      case "dashboard":
-        return <AdminDashboard />;
-      case "products":
-        return <AdminProducts />;
-      case "categories":
-        return <AdminCategories />;
-      case "brochures":
-        return <AdminBrochures />;
-      case "users":
-        return profile.role === 'super_admin' ? <AdminUsers /> : null;
-      case "settings":
-        return <AdminSettings />;
-      default:
-        return <AdminDashboard />;
-    }
-  };
-
   return (
     <div className="min-h-screen flex w-full bg-background">
       <Sidebar variant="inset" collapsible="icon">
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection(item.id)}
-                      isActive={activeSection === item.id}
-                      tooltip={item.title}
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+        <AdminSidebarMenu 
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          userRole={profile.role}
+        />
       </Sidebar>
-      <main className="flex-1 p-6 overflow-auto">
-        {renderContent()}
-      </main>
+      <AdminContent 
+        activeSection={activeSection}
+        userRole={profile.role}
+      />
     </div>
   );
 }
