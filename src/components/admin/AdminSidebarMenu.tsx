@@ -1,12 +1,8 @@
 import { Home, Database, FileText, Users, Settings } from "lucide-react";
 import {
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuButton,
 } from "@/components/ui/sidebar";
 
 interface AdminSidebarMenuProps {
@@ -26,26 +22,21 @@ export function AdminSidebarMenu({ activeSection, setActiveSection, userRole }: 
   ];
 
   return (
-    <SidebarContent>
-      <SidebarGroup>
-        <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {menuItems.map((item) => (
-              <SidebarMenuItem key={item.id}>
-                <SidebarMenuButton
-                  onClick={() => setActiveSection(item.id)}
-                  isActive={activeSection === item.id}
-                  tooltip={item.title}
-                >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    </SidebarContent>
+    <div className="p-4">
+      <h2 className="mb-4 text-lg font-semibold">Admin Panel</h2>
+      <SidebarMenu>
+        {menuItems.map((item) => (
+          <SidebarMenuItem key={item.id}>
+            <SidebarMenuButton
+              onClick={() => setActiveSection(item.id)}
+              isActive={activeSection === item.id}
+            >
+              <item.icon className="w-4 h-4" />
+              <span>{item.title}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </div>
   );
 }

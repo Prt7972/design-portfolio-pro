@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Sidebar } from "@/components/ui/sidebar";
+import { Sidebar, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { AdminSidebarMenu } from "@/components/admin/AdminSidebarMenu";
@@ -12,16 +12,15 @@ export default function Admin() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("dashboard");
   
-  // Check if user is authenticated first
   const { data: session } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("Session data:", session);
       return session;
     }
   });
 
-  // Then fetch user profile to check role
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ['profile', session?.user?.id],
     enabled: !!session?.user?.id,
@@ -44,7 +43,6 @@ export default function Admin() {
   });
 
   useEffect(() => {
-    // If not authenticated, redirect to login
     if (!session) {
       console.log("No session found, redirecting to login");
       toast.error("Please login to access the admin panel");
@@ -52,7 +50,6 @@ export default function Admin() {
       return;
     }
 
-    // If authenticated but not admin/super_admin, redirect to home
     if (!isLoading && (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin'))) {
       console.log("Unauthorized access attempt, redirecting to home");
       toast.error("You don't have permission to access the admin panel");
@@ -82,18 +79,20 @@ export default function Admin() {
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
-      <Sidebar variant="inset" collapsible="icon">
-        <AdminSidebarMenu 
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <Sidebar variant="inset" collapsible="icon">
+          <AdminSidebarMenu 
+            activeSection={activeSection}
+            setActiveSection={setActiveSection}
+            userRole={profile.role}
+          />
+        </Sidebar>
+        <AdminContent 
           activeSection={activeSection}
-          setActiveSection={setActiveSection}
           userRole={profile.role}
         />
-      </Sidebar>
-      <AdminContent 
-        activeSection={activeSection}
-        userRole={profile.role}
-      />
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }
