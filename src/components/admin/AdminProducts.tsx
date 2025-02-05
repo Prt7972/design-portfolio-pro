@@ -16,14 +16,14 @@ import * as z from "zod";
 
 const productSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  price: z.number().min(0, "Price must be positive").or(z.string().transform(val => {
+  description: z.string().min(1, "Description is required"),
+  price: z.number().min(1, "Price must be at least $1").or(z.string().transform(val => {
     const parsed = parseFloat(val);
-    if (isNaN(parsed)) throw new Error("Invalid price");
+    if (isNaN(parsed) || parsed < 1) throw new Error("Price must be at least $1");
     return parsed;
   })),
-  category_id: z.string().optional(),
-  image_url: z.string().optional(),
+  category_id: z.string().min(1, "Category is required"),
+  image_url: z.string().min(1, "Image URL is required"),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -70,7 +70,7 @@ export function AdminProducts() {
     defaultValues: {
       title: "",
       description: "",
-      price: 0,
+      price: 1,
       category_id: "",
       image_url: "",
     }
@@ -114,16 +114,17 @@ export function AdminProducts() {
 
   const saveProductMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
-      const productData = {
-        ...data,
-        price: typeof data.price === 'string' ? parseFloat(data.price) : data.price
-      };
-
       if (selectedProduct) {
         // Update existing product
         const { error } = await supabase
           .from('products')
-          .update(productData)
+          .update({
+            title: data.title,
+            description: data.description,
+            price: typeof data.price === 'string' ? parseFloat(data.price) : data.price,
+            category_id: data.category_id,
+            image_url: data.image_url
+          })
           .eq('id', selectedProduct.id);
         
         if (error) throw error;
@@ -131,7 +132,14 @@ export function AdminProducts() {
         // Create new product
         const { error } = await supabase
           .from('products')
-          .insert([{ ...productData, status: 'active' }]);
+          .insert([{
+            title: data.title,
+            description: data.description,
+            price: typeof data.price === 'string' ? parseFloat(data.price) : data.price,
+            category_id: data.category_id,
+            image_url: data.image_url,
+            status: 'active'
+          }]);
         
         if (error) throw error;
       }
@@ -164,7 +172,7 @@ export function AdminProducts() {
     form.reset({
       title: product.title,
       description: product.description || "",
-      price: product.price || 0,
+      price: product.price || 1,
       category_id: product.category_id || "",
       image_url: product.image_url || "",
     });
@@ -176,7 +184,7 @@ export function AdminProducts() {
     form.reset({
       title: "",
       description: "",
-      price: 0,
+      price: 1,
       category_id: "",
       image_url: "",
     });
@@ -219,7 +227,7 @@ export function AdminProducts() {
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder="Enter product title" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -233,7 +241,7 @@ export function AdminProducts() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder="Enter product description" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -245,11 +253,13 @@ export function AdminProducts() {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price</FormLabel>
+                    <FormLabel>Price ($)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
-                        step="0.01" 
+                        min="1"
+                        step="1" 
+                        placeholder="Enter price"
                         {...field}
                         onChange={e => field.onChange(parseFloat(e.target.value))}
                       />
@@ -291,7 +301,7 @@ export function AdminProducts() {
                   <FormItem>
                     <FormLabel>Image URL</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder="Enter image URL" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
