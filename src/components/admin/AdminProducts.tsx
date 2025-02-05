@@ -4,11 +4,31 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, Eye, EyeOff } from "lucide-react";
+import { Edit, Trash, Eye, EyeOff, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+const productSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  price: z.string().min(1, "Price is required").transform(val => parseFloat(val)),
+  category_id: z.string().optional(),
+  image_url: z.string().optional(),
+});
+
+type ProductFormData = z.infer<typeof productSchema>;
 
 export function AdminProducts() {
   const queryClient = useQueryClient();
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['admin-products'],
@@ -23,6 +43,33 @@ export function AdminProducts() {
       }
       
       return data || [];
+    }
+  });
+
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name');
+
+      if (error) {
+        toast.error('Failed to load categories');
+        throw error;
+      }
+      
+      return data || [];
+    }
+  });
+
+  const form = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      price: "",
+      category_id: "",
+      image_url: "",
     }
   });
 
@@ -62,6 +109,35 @@ export function AdminProducts() {
     }
   });
 
+  const saveProductMutation = useMutation({
+    mutationFn: async (data: ProductFormData) => {
+      if (selectedProduct) {
+        // Update existing product
+        const { error } = await supabase
+          .from('products')
+          .update(data)
+          .eq('id', selectedProduct.id);
+        
+        if (error) throw error;
+      } else {
+        // Create new product
+        const { error } = await supabase
+          .from('products')
+          .insert([{ ...data, status: 'active' }]);
+        
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      toast.success(selectedProduct ? 'Product updated successfully' : 'Product created successfully');
+      handleCloseDialog();
+    },
+    onError: () => {
+      toast.error(selectedProduct ? 'Failed to update product' : 'Failed to create product');
+    }
+  });
+
   const handleToggleStatus = (id: string, currentStatus: string) => {
     toggleStatusMutation.mutate({ 
       id, 
@@ -75,15 +151,153 @@ export function AdminProducts() {
     }
   };
 
+  const handleEdit = (product: any) => {
+    setSelectedProduct(product);
+    form.reset({
+      title: product.title,
+      description: product.description || "",
+      price: product.price?.toString() || "",
+      category_id: product.category_id || "",
+      image_url: product.image_url || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleAdd = () => {
+    setSelectedProduct(null);
+    form.reset({
+      title: "",
+      description: "",
+      price: "",
+      category_id: "",
+      image_url: "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedProduct(null);
+    form.reset();
+  };
+
+  const onSubmit = (data: ProductFormData) => {
+    saveProductMutation.mutate(data);
+  };
+
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Products</h1>
-        <Button>Add Product</Button>
+        <Button onClick={handleAdd}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Product
+        </Button>
       </div>
       
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{selectedProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="category_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories?.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="image_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Image URL</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {selectedProduct ? 'Update' : 'Create'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -119,7 +333,11 @@ export function AdminProducts() {
                     <EyeOff className="h-4 w-4" />
                   }
                 </Button>
-                <Button variant="ghost" size="icon">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => handleEdit(product)}
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button 
