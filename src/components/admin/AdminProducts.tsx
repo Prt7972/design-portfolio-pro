@@ -6,9 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash, Eye, EyeOff, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +17,11 @@ import * as z from "zod";
 const productSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  price: z.string().min(1, "Price is required").transform(val => parseFloat(val)),
+  price: z.number().min(0, "Price must be positive").or(z.string().transform(val => {
+    const parsed = parseFloat(val);
+    if (isNaN(parsed)) throw new Error("Invalid price");
+    return parsed;
+  })),
   category_id: z.string().optional(),
   image_url: z.string().optional(),
 });
@@ -67,7 +70,7 @@ export function AdminProducts() {
     defaultValues: {
       title: "",
       description: "",
-      price: "",
+      price: 0,
       category_id: "",
       image_url: "",
     }
@@ -111,11 +114,16 @@ export function AdminProducts() {
 
   const saveProductMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
+      const productData = {
+        ...data,
+        price: typeof data.price === 'string' ? parseFloat(data.price) : data.price
+      };
+
       if (selectedProduct) {
         // Update existing product
         const { error } = await supabase
           .from('products')
-          .update(data)
+          .update(productData)
           .eq('id', selectedProduct.id);
         
         if (error) throw error;
@@ -123,7 +131,7 @@ export function AdminProducts() {
         // Create new product
         const { error } = await supabase
           .from('products')
-          .insert([{ ...data, status: 'active' }]);
+          .insert([{ ...productData, status: 'active' }]);
         
         if (error) throw error;
       }
@@ -156,7 +164,7 @@ export function AdminProducts() {
     form.reset({
       title: product.title,
       description: product.description || "",
-      price: product.price?.toString() || "",
+      price: product.price || 0,
       category_id: product.category_id || "",
       image_url: product.image_url || "",
     });
@@ -168,7 +176,7 @@ export function AdminProducts() {
     form.reset({
       title: "",
       description: "",
-      price: "",
+      price: 0,
       category_id: "",
       image_url: "",
     });
@@ -239,7 +247,12 @@ export function AdminProducts() {
                   <FormItem>
                     <FormLabel>Price</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" {...field} />
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        {...field}
+                        onChange={e => field.onChange(parseFloat(e.target.value))}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
