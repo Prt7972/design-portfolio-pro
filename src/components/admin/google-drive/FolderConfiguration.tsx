@@ -17,7 +17,10 @@ const folderConfigSchema = z.object({
   }),
 });
 
-type FolderConfig = z.infer<typeof folderConfigSchema>;
+type FolderConfig = {
+  folder_id: string;
+  folder_type: "brochures" | "products" | "gallery";
+};
 
 export function FolderConfiguration() {
   const { data: folderConfigs, isLoading } = useQuery({
@@ -48,7 +51,10 @@ export function FolderConfiguration() {
     try {
       const { error } = await supabase
         .from('google_drive_config')
-        .insert([values]);
+        .insert([{
+          folder_id: values.folder_id,
+          folder_type: values.folder_type
+        }]);
 
       if (error) throw error;
 
