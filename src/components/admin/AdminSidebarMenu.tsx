@@ -24,7 +24,7 @@ export function AdminSidebarMenu({ activeSection, setActiveSection, userRole }: 
   ];
 
   return (
-    <div className="p-4">
+    <div className="p-4 w-64">
       <h2 className="mb-4 text-lg font-semibold">Admin Panel</h2>
       <SidebarMenu>
         {menuItems.map((item) => (

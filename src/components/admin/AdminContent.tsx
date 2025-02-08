@@ -35,8 +35,8 @@ export function AdminContent({ activeSection, userRole }: AdminContentProps) {
   };
 
   return (
-    <main className="flex-1 p-6 overflow-auto">
+    <div className="flex-1 p-6 overflow-auto">
       {renderContent()}
-    </main>
+    </div>
   );
 }

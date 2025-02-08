@@ -14,13 +14,15 @@ export default function Admin() {
           <AdminSidebarMenu 
             activeSection={activeSection}
             setActiveSection={setActiveSection}
-            userRole="super_admin" // Hardcoded for now
+            userRole="super_admin"
           />
         </Sidebar>
-        <AdminContent 
-          activeSection={activeSection}
-          userRole="super_admin" // Hardcoded for now
-        />
+        <main className="flex-1">
+          <AdminContent 
+            activeSection={activeSection}
+            userRole="super_admin"
+          />
+        </main>
       </div>
     </SidebarProvider>
   );
