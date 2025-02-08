@@ -1,4 +1,5 @@
-import { Home, Database, FileText, Users, Settings } from "lucide-react";
+
+import { Home, Database, FileText, Users, Settings, CloudIcon } from "lucide-react";
 import {
   SidebarMenu,
   SidebarMenuItem,
@@ -17,6 +18,7 @@ export function AdminSidebarMenu({ activeSection, setActiveSection, userRole }: 
     { id: "products", title: "Products", icon: Database },
     { id: "categories", title: "Categories", icon: FileText },
     { id: "brochures", title: "Brochures", icon: FileText },
+    { id: "google-drive", title: "Google Drive", icon: CloudIcon },
     ...(userRole === 'super_admin' ? [{ id: "users", title: "Users", icon: Users }] : []),
     { id: "settings", title: "Settings", icon: Settings },
   ];
