@@ -69,6 +69,66 @@ export type Database = {
         }
         Relationships: []
       }
+      google_drive_config: {
+        Row: {
+          created_at: string | null
+          folder_id: string
+          folder_type: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          folder_id: string
+          folder_type: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          folder_id?: string
+          folder_type?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      google_drive_files: {
+        Row: {
+          created_at: string | null
+          drive_file_id: string
+          file_name: string
+          file_size: number | null
+          folder_type: string
+          id: string
+          mime_type: string
+          updated_at: string | null
+          web_view_link: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          drive_file_id: string
+          file_name: string
+          file_size?: number | null
+          folder_type: string
+          id?: string
+          mime_type: string
+          updated_at?: string | null
+          web_view_link?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          drive_file_id?: string
+          file_name?: string
+          file_size?: number | null
+          folder_type?: string
+          id?: string
+          mime_type?: string
+          updated_at?: string | null
+          web_view_link?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category_id: string | null
