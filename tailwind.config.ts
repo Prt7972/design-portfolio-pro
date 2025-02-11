@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -18,6 +19,11 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Thalassia', 'sans-serif'],
+        space: ['Thalassia', 'sans-serif'],
+        syncopate: ['Thalassia', 'sans-serif'],
+      },
       colors: {
         gold: {
           DEFAULT: "#B8860B",
@@ -61,10 +67,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-      },
-      fontFamily: {
-        space: ["Space Grotesk", "sans-serif"],
-        syncopate: ["Syncopate", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
