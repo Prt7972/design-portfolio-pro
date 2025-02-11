@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,9 +19,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Thalassia', 'sans-serif'],
-        space: ['Thalassia', 'sans-serif'],
-        syncopate: ['Thalassia', 'sans-serif'],
+        playfair: ['Playfair Display', 'serif'],
+        inter: ['Inter', 'sans-serif'],
       },
       colors: {
         gold: {

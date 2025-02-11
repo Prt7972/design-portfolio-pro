@@ -10,8 +10,8 @@ import { useEffect, useState } from "react";
 
 const images = [
   "/lovable-uploads/bf82fc8b-4952-4608-85e7-267ca06f0d45.png",
-  "/placeholder.svg",
-  "/og-image.png",
+  "https://images.unsplash.com/photo-1615873968403-89e068629265?q=80&w=2532&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2400&auto=format&fit=crop",
 ];
 
 const Hero = () => {
@@ -29,7 +29,7 @@ const Hero = () => {
     <div className="relative h-screen overflow-hidden">
       <div className="absolute inset-0 z-10">
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-gold/10 via-gold/5 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-transparent"></div>
       </div>
 
       <Carousel className="w-full h-full" opts={{ loop: true }}>
@@ -52,15 +52,15 @@ const Hero = () => {
       </Carousel>
 
       <div className="absolute inset-0 z-20">
-        <nav className="w-full bg-midnight/30 backdrop-blur-sm border-b border-gold/20">
+        <nav className="w-full bg-black/50 backdrop-blur-sm border-b border-gold/20">
           <div className="container mx-auto px-4 py-4">
             <div className="flex justify-between items-center">
-              <div className="text-gold font-syncopate text-xl">LOGO</div>
-              <div className="flex space-x-6">
+              <div className="text-gold font-playfair text-2xl font-bold tracking-wider">CHINTAMANI</div>
+              <div className="flex space-x-8">
                 {["Home", "About", "Products", "Contact"].map((item) => (
                   <button
                     key={item}
-                    className="text-white/80 hover:text-gold transition-colors font-space"
+                    className="text-white/90 hover:text-gold transition-colors font-inter text-sm tracking-wide"
                   >
                     {item}
                   </button>
@@ -77,17 +77,17 @@ const Hero = () => {
             transition={{ duration: 0.8 }}
             className="max-w-4xl text-center"
           >
-            <h1 className="font-syncopate text-4xl md:text-6xl lg:text-7xl mb-6 text-white tracking-wider">
+            <h1 className="font-playfair text-5xl md:text-7xl lg:text-8xl mb-6 text-white tracking-wider">
               <span className="text-gold">Chintamani</span> Decors
             </h1>
-            <p className="font-space text-lg md:text-xl mb-12 text-gray-300">
+            <p className="font-inter text-lg md:text-xl mb-12 text-gray-100">
               India's leading brand for Decorative Laminates and Panels with PAN
               India Distribution.
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-gold hover:bg-gold-light text-white font-space px-8 py-4 rounded-full transition-colors duration-300 flex items-center gap-2"
+              className="bg-gold hover:bg-gold-light text-white font-inter px-8 py-4 rounded-full transition-colors duration-300 flex items-center gap-2"
             >
               Explore Collection
               <ChevronDown className="w-5 h-5 animate-float" />
