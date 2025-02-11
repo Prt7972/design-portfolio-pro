@@ -372,9 +372,4 @@ export function AdminProducts() {
                 </Button>
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
+          )
