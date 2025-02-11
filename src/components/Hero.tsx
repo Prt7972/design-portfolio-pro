@@ -1,3 +1,4 @@
+
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import {
@@ -77,7 +78,7 @@ const Hero = () => {
             className="max-w-4xl text-center"
           >
             <h1 className="font-syncopate text-4xl md:text-6xl lg:text-7xl mb-6 text-white tracking-wider">
-              <span className="text-gold">Future</span> of Design
+              <span className="text-gold">Chintamani</span> Decors
             </h1>
             <p className="font-space text-lg md:text-xl mb-12 text-gray-300">
               India's leading brand for Decorative Laminates and Panels with PAN
